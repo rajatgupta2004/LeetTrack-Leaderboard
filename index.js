@@ -2,10 +2,18 @@ const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
 const axios = require('axios');
+
+const reader = require('xlsx');
 const app = express();
 const port = 3001;
 
 app.use(cors());
+
+
+
+const spreadsheetId = '1Kyg8UBIXbkgIYwYmzYmPe3OtxkTZ02jQBHsDlhdmz7U';
+const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=xlsx`;
+
 
 // GraphQL query to fetch user stats (problem count by difficulty)
 const userStatsQuery = `
@@ -38,6 +46,76 @@ const recentSubQuery = `
   }
 `;
 
+
+
+async function refreshStudentsData(){
+  // Fetch the Google Sheets file
+  axios.get(url, { responseType: 'arraybuffer' })
+  .then(response => {
+    // Convert response data into buffer
+    const dataBuffer = Buffer.from(response.data);
+    // Parse the Excel file
+    const file = reader.read(dataBuffer);
+    let data = [];
+    const sheets = file.SheetNames;
+    for (let i = 0; i < sheets.length; i++) {
+      const temp = reader.utils.sheet_to_json(file.Sheets[sheets[i]]);
+      temp.forEach(res => {
+        data.push(res);
+      });
+    }
+    // Print data
+
+    let sName =``;
+    let sUrl = ``;
+    let sRoll = ``;
+    let sSection = ``;
+    data.forEach((val)=>{
+      sName+=(val.name+'\n');
+      sRoll+=(val.roll+'\n');
+      sUrl+=(val.url+'\n');
+      sSection+=(val.section+'\n');
+    })
+
+    fs.writeFile('roll.txt', sRoll, (err) => {
+      if (err) {
+        console.error('Error writing to file', err);
+      } else {
+        console.log('Text written to file successfully');
+      }
+    });
+
+    fs.writeFile('name.txt', sName, (err) => {
+      if (err) {
+        console.error('Error writing to file', err);
+      } else {
+        console.log('Text written to file successfully');
+      }
+    });
+
+    fs.writeFile('sections.txt', sSection, (err) => {
+      if (err) {
+        console.error('Error writing to file', err);
+      } else {
+        console.log('Text written to file successfully');
+      }
+    });
+
+    fs.writeFile('urls.txt', sUrl, (err) => {
+      if (err) {
+        console.error('Error writing to file', err);
+      } else {
+        console.log('Text written to file successfully');
+      }
+    });
+
+
+  })
+  .catch(error => {
+    console.error('Error fetching the file:', error);
+  });
+
+}
 async function fetchLeet(username) {
   const graphqlUrl = "https://leetcode.com/graphql";
   
@@ -185,9 +263,15 @@ app.get('/data', (req, res) => {
 });
 
 // Initial data fetch and periodic refresh every hour
+
+
+refreshStudentsData();
 fetchAndSaveData();
 setInterval(fetchAndSaveData, 60 * 60 * 1000);
+setInterval(refreshStudentsData, 30 * 60 * 1000);
 
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+
