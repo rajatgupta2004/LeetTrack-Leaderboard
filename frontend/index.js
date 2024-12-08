@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Populate section filter dropdown
         const populateSectionFilter = () => {
             // var sections = [...new Set(data.map(student => student.section || 'N/A'))].sort();
-            const sections = ['A(H)','AC','AD','AE','C','D','E','F','G','H','Day Scholars','Hostellers'];
+            const sections = ['A','B','C','D'];
             sectionFilter.innerHTML = '<option value="all">All Sections</option>';
             sections.forEach(section => {
                 const option = document.createElement('option');
@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td class="p-4">${student.roll}</td>
                     <td class="p-r">${(diff>0)? " \u2191 " + diff : diff}</td>
                     <td class="p-4">
-                        ${student.url.startsWith('https://leetcode.com/u/') 
+                        ${(student.url.startsWith('https://leetcode.com/u/') && student.info==null)
                             ? `<a href="${student.url}" target="_blank" class="text-blue-400">${student.name}</a>`
                             : `<div class="text-red-500">${student.name}</div>`}
                     </td>

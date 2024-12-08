@@ -63,6 +63,7 @@ async function fetchLeet(username) {
       easySolved: 0,
       mediumSolved: 0,
       hardSolved: 0,
+      isCorrect:true,
     };
 
     userStats.forEach(item => {
@@ -96,6 +97,7 @@ async function fetchLeet(username) {
         easySolved: 0,
         mediumSolved: 0,
         hardSolved: 0,
+        isCorrect: false,
       },
       recentSubmissions: [],
     };
@@ -109,7 +111,6 @@ async function fetchAndSaveData() {
     const names = fs.readFileSync('name.txt', 'utf-8').split('\n').map(line => line.trim()).filter(Boolean);
     const urls = fs.readFileSync('urls.txt', 'utf-8').split('\n').map(line => line.trim()).filter(Boolean);
     const sections = fs.readFileSync('sections.txt', 'utf-8').split('\n').map(line => line.trim()).filter(Boolean);
-    const day = fs.readFileSync('day.txt','utf-8').split('\n').map(line=>line.trim()).filter(Boolean);
     
     if (rolls.length !== names.length || names.length !== urls.length || names.length !== sections.length) {
       console.error('Error: The number of rolls, names, URLs, and sections do not match.');
@@ -121,14 +122,15 @@ async function fetchAndSaveData() {
 
     
     for (let i = 0; i < rolls.length; i++) {
+
+
       const roll = rolls[i];
       const name = names[i];
       const url = urls[i];
       const section = sections[i];
-      const dayi = day[i];
-      let studentData = { roll, name, url, section, dayi };
+      let studentData = { roll, name, url, section };
 
-      console.log(`Processing data for roll number: ${roll}, name: ${name}, section: ${section}, day: ${dayi}`);
+      console.log(`Processing data for roll number: ${roll}, name: ${name}, section: ${section}`);
 
       
       if (url.startsWith('https://leetcode.com/u/')) {
@@ -138,16 +140,21 @@ async function fetchAndSaveData() {
 
         try {
           const { stats, recentSubmissions } = await fetchLeet(username);
-          studentData = {
-            ...studentData,
-            username,
-            totalSolved: stats.totalSolved,
-            easySolved: stats.easySolved,
-            mediumSolved: stats.mediumSolved,
-            hardSolved: stats.hardSolved,
-            recentSubmissions,
-          };
-          console.log(`Data for ${username} fetched and processed successfully.`);
+          if(!stats.isCorrect){
+            studentData.info = 'No LeetCode data available';
+          }else{
+            studentData = {
+              ...studentData,
+              username,
+              totalSolved: stats.totalSolved,
+              easySolved: stats.easySolved,
+              mediumSolved: stats.mediumSolved,
+              hardSolved: stats.hardSolved,
+              recentSubmissions,
+            };
+            console.log(`Data for ${username} fetched and processed successfully.`);
+          }
+          
         } catch (error) {
           console.error(`Error fetching data for ${username}:`, error);
         }
